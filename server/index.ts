@@ -41,20 +41,22 @@ router.get('/spaces/:key?', (req, res) => {
 
 router.get('/:space/proposals', async (req, res) => {
   const { space } = req.params;
-  const query = "SELECT * FROM messages WHERE type = 'proposal' AND space = ? ORDER BY timestamp DESC";
+  const query =
+    "SELECT * FROM messages WHERE type = 'proposal' AND space = ? ORDER BY timestamp DESC";
   db.queryAsync(query, [space]).then(messages => {
-    res.json(Object.fromEntries(
-      messages.map(message => formatMessage(message))
-    ));
+    res.json(
+      Object.fromEntries(messages.map(message => formatMessage(message)))
+    );
   });
 });
 
 router.get('/timeline', async (req, res) => {
-  const query = "SELECT * FROM messages WHERE type = 'proposal' ORDER BY timestamp DESC LIMIT 30";
+  const query =
+    "SELECT * FROM messages WHERE type = 'proposal' ORDER BY timestamp DESC LIMIT 30";
   db.queryAsync(query).then(messages => {
-    res.json(Object.fromEntries(
-      messages.map(message => formatMessage(message))
-    ));
+    res.json(
+      Object.fromEntries(messages.map(message => formatMessage(message)))
+    );
   });
 });
 
@@ -62,24 +64,29 @@ router.get('/:space/proposal/:id', async (req, res) => {
   const { space, id } = req.params;
   const query = `SELECT * FROM messages WHERE type = 'vote' AND space = ? AND JSON_EXTRACT(payload, "$.proposal") = ? ORDER BY timestamp ASC`;
   db.queryAsync(query, [space, id]).then(messages => {
-    res.json(Object.fromEntries(
-      messages.map(message => {
-        const metadata = JSON.parse(message.metadata);
-        return [message.address, {
-          address: message.address,
-          msg: {
-            version: message.version,
-            timestamp: message.timestamp.toString(),
-            space: message.space,
-            type: message.type,
-            payload: JSON.parse(message.payload)
-          },
-          sig: message.sig,
-          authorIpfsHash: message.id,
-          relayerIpfsHash: metadata.relayer_ipfs_hash
-        }];
-      })
-    ));
+    res.json(
+      Object.fromEntries(
+        messages.map(message => {
+          const metadata = JSON.parse(message.metadata);
+          return [
+            message.address,
+            {
+              address: message.address,
+              msg: {
+                version: message.version,
+                timestamp: message.timestamp.toString(),
+                space: message.space,
+                type: message.type,
+                payload: JSON.parse(message.payload)
+              },
+              sig: message.sig,
+              authorIpfsHash: message.id,
+              relayerIpfsHash: metadata.relayer_ipfs_hash
+            }
+          ];
+        })
+      )
+    );
   });
 });
 
@@ -95,6 +102,9 @@ router.get('/voters', async (req, res) => {
 router.post('/message', async (req, res) => {
   const body = req.body;
   const msg = jsonParse(body.msg);
+
+  console.log(body.msg);
+
   const ts = (Date.now() / 1e3).toFixed();
   // const minBlock = (3600 * 24) / 15;
 
@@ -106,12 +116,17 @@ router.post('/message', async (req, res) => {
     !msg.space ||
     !msg.payload ||
     Object.keys(msg.payload).length === 0
-  ) return sendError(res, 'wrong signed message');
+  )
+    return sendError(res, 'wrong signed message');
 
   if (!spaces[msg.space] && msg.type !== 'settings')
     return sendError(res, 'unknown space');
 
-  if (!msg.timestamp || typeof msg.timestamp !== 'string' || msg.timestamp > (ts + 300))
+  if (
+    !msg.timestamp ||
+    typeof msg.timestamp !== 'string' ||
+    msg.timestamp > ts + 300
+  )
     return sendError(res, 'wrong timestamp');
 
   if (!msg.version || msg.version !== pkg.version)
@@ -120,7 +135,13 @@ router.post('/message', async (req, res) => {
   if (!msg.type || !['proposal', 'vote', 'settings'].includes(msg.type))
     return sendError(res, 'wrong message type');
 
-  if (!await verifySignature(body.address, body.sig, hashPersonalMessage(body.msg)))
+  if (
+    !(await verifySignature(
+      body.address,
+      body.sig,
+      hashPersonalMessage(body.msg, body.address)
+    ))
+  )
     return sendError(res, 'wrong signature');
 
   if (msg.type === 'proposal') {
@@ -130,26 +151,30 @@ router.post('/message', async (req, res) => {
       msg.payload.choices.length < 2 ||
       !msg.payload.snapshot ||
       !msg.payload.metadata
-    ) return sendError(res, 'wrong proposal format');
+    )
+      return sendError(res, 'wrong proposal format');
 
     if (
       !msg.payload.name ||
       msg.payload.name.length > 256 ||
       !msg.payload.body ||
       msg.payload.body.length > 4e4
-    ) return sendError(res, 'wrong proposal size');
+    )
+      return sendError(res, 'wrong proposal size');
 
     if (
       typeof msg.payload.metadata !== 'object' ||
       JSON.stringify(msg.payload.metadata).length > 2e4
-    ) return sendError(res, 'wrong proposal metadata');
+    )
+      return sendError(res, 'wrong proposal metadata');
 
     if (
       !msg.payload.start ||
       // ts > msg.payload.start ||
       !msg.payload.end ||
       msg.payload.start >= msg.payload.end
-    ) return sendError(res, 'wrong proposal period');
+    )
+      return sendError(res, 'wrong proposal period');
   }
 
   if (msg.type === 'vote') {
@@ -158,24 +183,31 @@ router.post('/message', async (req, res) => {
       !msg.payload.proposal ||
       !msg.payload.choice ||
       !msg.payload.metadata
-    ) return sendError(res, 'wrong vote format');
+    )
+      return sendError(res, 'wrong vote format');
 
     if (
       typeof msg.payload.metadata !== 'object' ||
       JSON.stringify(msg.payload.metadata).length > 1e4
-    ) return sendError(res, 'wrong vote metadata');
+    )
+      return sendError(res, 'wrong vote metadata');
 
     const query = `SELECT * FROM messages WHERE space = ? AND id = ? AND type = 'proposal'`;
-    const proposals = await db.queryAsync(query, [msg.space, msg.payload.proposal]);
-    if (!proposals[0])
-      return sendError(res, 'unknown proposal');
+    const proposals = await db.queryAsync(query, [
+      msg.space,
+      msg.payload.proposal
+    ]);
+    if (!proposals[0]) return sendError(res, 'unknown proposal');
     const payload = jsonParse(proposals[0].payload);
     if (ts > payload.end || payload.start > ts)
       return sendError(res, 'not in voting window');
   }
 
   if (msg.type === 'settings') {
-    if (snapshot.utils.validateSchema(snapshot.schemas.space, msg.payload) !== true)
+    if (
+      snapshot.utils.validateSchema(snapshot.schemas.space, msg.payload) !==
+      true
+    )
       return sendError(res, 'wrong space format');
   }
 
