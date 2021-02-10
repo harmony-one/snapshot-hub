@@ -232,7 +232,7 @@ router.post('/message', async (req, res) => {
     const networkStr = network === 'testnet' ? 'demo.' : '';
     let message = `${msg.space} (${network})\n`;
     message += `**${msg.payload.name}**\n`;
-    message += `<https://${networkStr}snapshot.page/#/${msg.space}/proposal/${authorIpfsRes}>`;
+    message += `<https://${networkStr}staking.harmony.one/snapshot/#/${msg.space}/proposal/${authorIpfsRes}>`;
     sendMessage(message);
   }
 
