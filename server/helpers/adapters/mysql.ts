@@ -145,21 +145,21 @@ export async function loadSpace(id) {
   // const ts = (Date.now() / 1e3).toFixed();
 
   return {
-    name: 'Harmony.Staking',
+    name: 'Network Governance',
     network: '1',
     symbol: 'ONE',
     strategies: [
       {
         name: 'erc20-balance-of',
         params: {
-          address: '0x34870322f473830d28d28bef7f1d4178edf832d8',
-          symbol: '0xDollar',
+          address: '0x00eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+          symbol: 'ONE',
           decimals: 18
         }
       }
     ],
     members: [],
-    filters: { defaultTab: 'core', minScore: 0 }
+    filters: { defaultTab: 'all', minScore: 0 }
   };
 
   try {
