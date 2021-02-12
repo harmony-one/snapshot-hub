@@ -129,15 +129,56 @@ export async function loadSpaces() {
   const spaces = {};
   const max = 200;
   const pages = Math.ceil(ids.length / max);
-  for (let i = 0; i < pages; i++) {
-    const pageIds = ids.slice(max * i, max * (i + 1));
-    const pageSpaces = await Promise.all(pageIds.map(id => loadSpace(id)));
-    pageIds.forEach((id, index) => {
-      if (pageSpaces[index]) spaces[id] = pageSpaces[index];
-    });
-  }
-  console.timeEnd('loadSpaces');
-  return spaces;
+  // for (let i = 0; i < pages; i++) {
+  //   const pageIds = ids.slice(max * i, max * (i + 1));
+  //   // const pageSpaces = await Promise.all(pageIds.map(id => loadSpace(id)));
+  //
+  //   const pageSpaces = [
+  //
+  //
+  //   pageIds.forEach((id, index) => {
+  //     if (pageSpaces[index]) spaces[id] = pageSpaces[index];
+  //   });
+  // }
+  // console.timeEnd('loadSpaces');
+  return {
+    'staking-mainnet': {
+      name: 'Network Governance Mainnet',
+      key: 'staking-mainnet',
+      network: '1',
+      symbol: 'ONE',
+      strategies: [
+        {
+          name: 'erc20-balance-of',
+          params: {
+            address: '0x00eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+            symbol: 'ONE',
+            decimals: 18
+          }
+        }
+      ],
+      members: [],
+      filters: { defaultTab: 'all', minScore: 0 }
+    },
+    'staking-testnet': {
+      name: 'Network Governance Testnet',
+      key: 'staking-testnet',
+      network: '1',
+      symbol: 'ONE',
+      strategies: [
+        {
+          name: 'erc20-balance-of',
+          params: {
+            address: '0x00eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+            symbol: 'ONE',
+            decimals: 18
+          }
+        }
+      ],
+      members: [],
+      filters: { defaultTab: 'all', minScore: 0 }
+    }
+  };
 }
 
 export async function loadSpace(id) {
