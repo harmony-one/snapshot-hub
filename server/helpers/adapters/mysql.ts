@@ -163,7 +163,7 @@ export async function loadSpaces() {
     'staking-testnet': {
       name: 'Network Governance Testnet',
       key: 'staking-testnet',
-      network: '1',
+      network: '2',
       symbol: 'ONE',
       strategies: [
         {
