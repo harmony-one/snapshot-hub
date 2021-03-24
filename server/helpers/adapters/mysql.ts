@@ -117,7 +117,7 @@ export async function getActiveProposals(spaces) {
 
 export async function loadSpaces() {
   console.time('loadSpaces');
-  const query = 'SELECT id FROM spaces';
+  const query = 'SELECT * FROM spaces';
   let result = [];
   try {
     result = await db.queryAsync(query);
@@ -125,25 +125,10 @@ export async function loadSpaces() {
     console.log(e);
   }
   const ids = result.map((space: any) => space.id);
-  console.log('Spaces 1111', ids.length);
-  const spaces = {};
-  const max = 200;
-  const pages = Math.ceil(ids.length / max);
-  // for (let i = 0; i < pages; i++) {
-  //   const pageIds = ids.slice(max * i, max * (i + 1));
-  //   // const pageSpaces = await Promise.all(pageIds.map(id => loadSpace(id)));
-  //
-  //   const pageSpaces = [
-  //
-  //
-  //   pageIds.forEach((id, index) => {
-  //     if (pageSpaces[index]) spaces[id] = pageSpaces[index];
-  //   });
-  // }
-  // console.timeEnd('loadSpaces');
-  return {
+  console.log('Spaces from DB: ', ids.length);
+  const spaces = {
     'staking-mainnet': {
-      name: 'Network Governance Mainnet',
+      name: 'Harmony Mainnet',
       key: 'staking-mainnet',
       network: '1',
       symbol: 'ONE',
@@ -161,7 +146,7 @@ export async function loadSpaces() {
       filters: { defaultTab: 'all', minScore: 0 }
     },
     'staking-testnet': {
-      name: 'Network Governance Testnet',
+      name: 'Harmony Testnet',
       key: 'staking-testnet',
       network: '2',
       symbol: 'ONE',
@@ -179,6 +164,26 @@ export async function loadSpaces() {
       filters: { defaultTab: 'all', minScore: 0 }
     }
   };
+  const max = 200;
+  const pages = Math.ceil(ids.length / max);
+
+  for (let i = 0; i < pages; i++) {
+    const pageIds = ids.slice(max * i, max * (i + 1));
+    pageIds.forEach((id, index) => {
+      let spaceItem: any = result[index];
+      spaces[id] = {
+        name: spaceItem.name,
+        network: spaceItem.network,
+        symbol: spaceItem.symbol,
+        strategies: JSON.parse(spaceItem.strategies),
+        members: (spaceItem.members == null)? []: JSON.parse(spaceItem.members),
+        filters: (spaceItem.filters == null)? {}: JSON.parse(spaceItem.filters)
+      };
+    });
+  }
+
+  console.timeEnd('loadSpaces');
+  return spaces;
 }
 
 export async function loadSpace(id) {

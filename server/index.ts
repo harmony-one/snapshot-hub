@@ -139,7 +139,7 @@ router.post('/message', async (req, res) => {
     !(await verifySignature(
       body.address,
       body.sig,
-      hashPersonalMessage(body.msg, body.address)
+      hashPersonalMessage(body.msg)
     ))
   )
     return sendError(res, 'wrong signature');
