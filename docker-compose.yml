@@ -1,6 +1,5 @@
 version: "3.7"
 services:
-
   # Snapshot hub
   snapshot-hub:
     build: .
@@ -11,10 +10,12 @@ services:
       - snapshot-mysql
     ports:
       - "8080:8080"
+    links:
+      - "snapshot-mysql:snapshot-mysql"
 
   # Snapshot MySQL instance
   snapshot-mysql:
-    image: mysql:8.0.21
+    image: mysql:5.7
     container_name: snapshot-mysql
     environment:
       MYSQL_USER: "admin"
@@ -23,6 +24,9 @@ services:
       MYSQL_DATABASE: "snapshot"
     volumes:
         - ./server/helpers/database/:/docker-entrypoint-initdb.d
+        # - /root/disk/snapshot:/var/lib/mysql
+    ports:
+      - "3306:3306"
 
 networks:
   default:
