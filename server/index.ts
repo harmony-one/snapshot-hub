@@ -146,7 +146,7 @@ router.post('/message', async (req, res) => {
 
   if (msg.type === 'proposal') {
     if (
-      Object.keys(msg.payload).length !== 7 ||
+      Object.keys(msg.payload).length !== 8 ||
       !msg.payload.choices ||
       msg.payload.choices.length < 2 ||
       !msg.payload.snapshot ||
