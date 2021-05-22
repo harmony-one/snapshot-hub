@@ -6,6 +6,7 @@ import db from './helpers/mysql';
 import relayer from './helpers/relayer';
 import { sendMessage } from './helpers/discord';
 import { pinJson } from './helpers/ipfs';
+import { getStakedAmountByBlock } from './helpers/harmony';
 import {
   verifySignature,
   jsonParse,
@@ -272,5 +273,7 @@ router.post('/message', async (req, res) => {
 
   return res.json({ ipfsHash: authorIpfsRes });
 });
+
+router.get('/harmony/staked', getStakedAmountByBlock);
 
 export default router;
